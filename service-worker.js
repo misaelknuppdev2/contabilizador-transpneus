@@ -1,5 +1,13 @@
 const CACHE_NAME = "contabilizador-v1";
-const ASSETS = [".", "/index.html", "/manifest.webmanifest"];
+const ASSETS = [
+  ".",
+  "/index.html",
+  "/manifest.webmanifest",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/icon-192.svg",
+  "/icons/icon-512.svg",
+];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
@@ -20,25 +28,36 @@ self.addEventListener("fetch", event => {
   const url = new URL(req.url);
 
   // same-origin navigation or app shell -> cache first
-  if (req.mode === 'navigate' || ASSETS.includes(url.pathname)) {
+  if (req.mode === "navigate" || ASSETS.includes(url.pathname)) {
     event.respondWith(
-      caches.match(req).then(cached => cached || fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
-        return res;
-      })).catch(() => caches.match('/index.html'))
+      caches
+        .match(req)
+        .then(
+          cached =>
+            cached ||
+            fetch(req).then(res => {
+              const copy = res.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+              return res;
+            })
+        )
+        .catch(() => caches.match("/index.html"))
     );
     return;
   }
 
   // images: cache-first
-  if (req.destination === 'image') {
+  if (req.destination === "image") {
     event.respondWith(
-      caches.match(req).then(cached => cached || fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
-        return res;
-      }))
+      caches.match(req).then(
+        cached =>
+          cached ||
+          fetch(req).then(res => {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+            return res;
+          })
+      )
     );
     return;
   }

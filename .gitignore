@@ -1,0 +1,10 @@
+node_modules
+node_modules/.package-lock.json
+
+# Local Netlify folder
+.netlify
+
+# Generated artifacts
+__page_screenshot.png
+__remote_screenshot.png
+reports/

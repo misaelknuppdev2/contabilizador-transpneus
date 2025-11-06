@@ -66,3 +66,43 @@ Nota sobre hooks
 Acessibilidade
 
 - Integrei `axe-core` ao `run_checks.js`. Executando `npm run check` agora também roda uma auditoria de acessibilidade (axe) e imprime violações, se houver. Eu corrigi automaticamente problemas detectados (ex.: label `for` e landmark `<main>`). Depois dessas correções, o audit retornou sem violações no meu teste local.
+
+## Gerar ícones PNG e publicar (melhorias recomendadas)
+
+- Para compatibilidade máxima (especialmente iOS) é recomendado fornecer PNGs 192x192 e 512x512 além dos SVGs. Para gerar PNGs automaticamente a partir dos SVGs já presentes, use o script:
+
+```zsh
+./scripts/generate-icons.sh
+```
+
+Esse script usa ImageMagick (`convert`). No Debian/Ubuntu instale com:
+
+```zsh
+sudo apt update && sudo apt install -y imagemagick
+```
+
+- Depois gere os PNGs, confirme que os arquivos `icons/icon-192.png` e `icons/icon-512.png` existem e faça commit:
+
+```zsh
+git add icons/icon-192.png icons/icon-512.png
+git commit -m "chore: add PNG icons for PWA"
+git push
+```
+
+## Publicação (opções)
+
+1. Netlify (recomendado para HTTPS permanente e nome customizável)
+
+- Instale o Netlify CLI: `npm install -g netlify-cli`
+- Autentique: `netlify login`
+- Deploy: `netlify deploy --dir=. --prod` e escolha o nome do site (ex: `contabilizador`) se disponível.
+
+2. GitHub Pages
+
+- Crie um repositório no GitHub e empurre a branch master/main. Em GitHub → Settings → Pages, escolha a branch e pasta `root`.
+
+3. localtunnel (rápido, temporário)
+
+- Teste rápido: `npx localtunnel --port 8080 --subdomain contabilizador` (ephemeral)
+
+Se quiser, eu te guio no deploy no Netlify ou GitHub Pages — diga qual prefere e eu gero os comandos e verifico o site após o deploy.

@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#0b6ee6" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" href="/icons/icon-192.svg">
-    <link rel="apple-touch-icon" href="/icons/icon-192.svg">
+    <!-- Prefer PNG icons for broader device compatibility; SVG kept as fallback -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+    <link rel="icon" href="/icons/icon-192.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Contabilizador de Rodas - TransPneus</title>
@@ -369,76 +372,77 @@
         </div>
       </header>
 
-  <main>
-  <div class="grid">
-        <div class="card">
-          <form id="form">
-            <label for="date">Data do serviço</label>
-            <input type="date" id="date" required />
+      <main>
+        <div class="grid">
+          <div class="card">
+            <form id="form">
+              <label for="date">Data do serviço</label>
+              <input type="date" id="date" required />
 
-            <label for="desc">Descrição do serviço</label>
-            <textarea
-              id="desc"
-              rows="2"
-              placeholder="Ex: Retífica, balanceamento..."
-              required
-            ></textarea>
+              <label for="desc">Descrição do serviço</label>
+              <textarea
+                id="desc"
+                rows="2"
+                placeholder="Ex: Retífica, balanceamento..."
+                required
+              ></textarea>
 
-            <label for="qty">Quantidade de rodas</label>
-            <input type="number" id="qty" min="1" value="1" required />
+              <label for="qty">Quantidade de rodas</label>
+              <input type="number" id="qty" min="1" value="1" required />
 
-            <label for="worker">Colaborador</label>
-            <select id="worker" required>
-              <option value="">Selecione...</option>
-              <option value="Luís">Luís</option>
-              <option value="Dune">Dune</option>
-            </select>
-
-            <label for="photos">Fotos do serviço (opcional)</label>
-            <input type="file" id="photos" accept="image/*" multiple />
-            <div class="file-hint">
-              Escolha até 6 fotos por serviço; imagens grandes aumentam o uso de armazenamento local
-            </div>
-
-            <div style="display: flex; gap: 8px; margin-top: 12px">
-              <button type="submit">Adicionar serviço</button>
-              <button type="button" id="clear" class="ghost">Limpar tudo</button>
-              <button type="button" id="export" class="ghost">Exportar CSV</button>
-            </div>
-          </form>
-
-          <div style="margin-top: 12px">
-            <div class="controls">
-              <label for="filterMonth" style="margin: 0">Filtrar mês</label>
-              <input type="month" id="filterMonth" />
-              <label for="filterWorker" style="margin: 0">Colaborador</label>
-              <select id="filterWorker">
-                <option value="">Todos</option>
+              <label for="worker">Colaborador</label>
+              <select id="worker" required>
+                <option value="">Selecione...</option>
                 <option value="Luís">Luís</option>
                 <option value="Dune">Dune</option>
               </select>
-              <button id="applyFilter" class="ghost">Aplicar</button>
-              <button id="resetFilter" class="ghost">Resetar</button>
-              <div class="right">
-                <span class="small muted">Valor por roda</span>
-                <strong style="margin-left: 8px">R$ 6,00</strong>
+
+              <label for="photos">Fotos do serviço (opcional)</label>
+              <input type="file" id="photos" accept="image/*" multiple />
+              <div class="file-hint">
+                Escolha até 6 fotos por serviço; imagens grandes aumentam o uso de armazenamento
+                local
               </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 12px">
+                <button type="submit">Adicionar serviço</button>
+                <button type="button" id="clear" class="ghost">Limpar tudo</button>
+                <button type="button" id="export" class="ghost">Exportar CSV</button>
+              </div>
+            </form>
+
+            <div style="margin-top: 12px">
+              <div class="controls">
+                <label for="filterMonth" style="margin: 0">Filtrar mês</label>
+                <input type="month" id="filterMonth" />
+                <label for="filterWorker" style="margin: 0">Colaborador</label>
+                <select id="filterWorker">
+                  <option value="">Todos</option>
+                  <option value="Luís">Luís</option>
+                  <option value="Dune">Dune</option>
+                </select>
+                <button id="applyFilter" class="ghost">Aplicar</button>
+                <button id="resetFilter" class="ghost">Resetar</button>
+                <div class="right">
+                  <span class="small muted">Valor por roda</span>
+                  <strong style="margin-left: 8px">R$ 6,00</strong>
+                </div>
+              </div>
+
+              <div class="summary" id="summary"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <strong>Serviços registrados</strong>
+              <span class="muted small" id="countText">0 serviços</span>
             </div>
 
-            <div class="summary" id="summary"></div>
+            <div class="services" id="servicesList"></div>
           </div>
         </div>
-
-        <div class="card">
-          <div style="display: flex; justify-content: space-between; align-items: center">
-            <strong>Serviços registrados</strong>
-            <span class="muted small" id="countText">0 serviços</span>
-          </div>
-
-          <div class="services" id="servicesList"></div>
-        </div>
-      </div>
-        </main>
+      </main>
     </div>
 
     <!-- lightbox -->
@@ -768,21 +772,23 @@ ${photosHtml}
     <script>
       // register service worker for PWA install/offline support only on secure contexts / localhost
       if (
-        'serviceWorker' in navigator &&
-        (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+        "serviceWorker" in navigator &&
+        (location.protocol === "https:" ||
+          location.hostname === "localhost" ||
+          location.hostname === "127.0.0.1")
       ) {
         navigator.serviceWorker
-          .register('/service-worker.js')
+          .register("/service-worker.js")
           .then(reg => {
-            console.log('Service worker registered', reg.scope);
+            console.log("Service worker registered", reg.scope);
           })
-          .catch(err => console.warn('SW register failed', err));
+          .catch(err => console.warn("SW register failed", err));
       }
 
       // optional: prompt handler for beforeinstallprompt
-      window.addEventListener('beforeinstallprompt', e => {
+      window.addEventListener("beforeinstallprompt", e => {
         e.preventDefault();
-        console.log('beforeinstallprompt fired');
+        console.log("beforeinstallprompt fired");
         // You could show an install button and call e.prompt() on click
       });
     </script>
