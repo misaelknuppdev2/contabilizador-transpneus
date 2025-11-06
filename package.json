@@ -5,7 +5,9 @@
   "scripts": {
     "check": "node run_checks.js",
     "format": "prettier --write \"**/*.{html,js,json,md}\"",
-    "start": "npx http-server -c-1 -p 8080"
+    "start": "npx http-server -c-1 -p 8080",
+    "deploy:gh": "npx gh-pages -d .",
+    "deploy:netlify": "netlify deploy --dir=. --prod"
   },
   "lint-staged": {
     "**/*.{js,html,json,md}": [
@@ -21,6 +23,8 @@
     "puppeteer-core": "^21.0.0",
     "axe-core": "^4.8.0",
     "husky": "^8.0.0",
-    "lint-staged": "^13.0.0"
+    "lint-staged": "^13.0.0",
+    "gh-pages": "^4.0.0",
+    "netlify-cli": "^11.0.0"
   }
 }
