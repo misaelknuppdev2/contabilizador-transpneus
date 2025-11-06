@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#0b6ee6" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/icon-192.svg">
+    <link rel="apple-touch-icon" href="/icons/icon-192.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Contabilizador de Rodas - TransPneus</title>
+    <style>
+      :root {
+        --bg-900: #000000;
+        --panel-800: #0f1720;
+        --panel-700: #111827;
+        --card-600: #0b1220;
+        --accent-blue: #0b6ee6;
+        --accent-blue-600: #0a5bd0;
+        --muted-400: #9aa4b2;
+        --muted-300: #c5ccd3;
+        --white: #ffffff;
+        --danger: #e55353;
+        --glass: rgba(255, 255, 255, 0.04);
+        --radius: 10px;
+        --shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+        --glass-border: rgba(255, 255, 255, 0.03);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        min-height: 100%;
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        background: linear-gradient(180deg, var(--bg-900) 0%, #050505 100%);
+        color: var(--white);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        padding: 28px;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: block;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+      .logo-mark {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #0a0a0a, #070707);
+        box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        position: relative;
+        flex: 0 0 56px;
+      }
+      .logo-mark::before {
+        content: "";
+        position: absolute;
+        left: 8px;
+        top: 6px;
+        bottom: 6px;
+        width: 10px;
+        background-image: repeating-linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.12) 0 6px,
+          rgba(255, 255, 255, 0.02) 6px 12px
+        );
+        border-radius: 4px;
+        transform: skewX(-6deg);
+      }
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--white);
+        font-weight: 700;
+      }
+      .subtitle {
+        color: var(--muted-300);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 20px;
+        align-items: start;
+      }
+      .card {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--shadow);
+        border-radius: var(--radius);
+        padding: 16px;
+      }
+      label {
+        display: block;
+        margin: 10px 0 6px;
+        font-size: 13px;
+        color: var(--muted-400);
+        font-weight: 600;
+      }
+      input[type="date"],
+      input[type="month"],
+      input[type="number"],
+      select,
+      textarea,
+      input[type="text"],
+      input[type="file"] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+        color: var(--white);
+        font-size: 14px;
+        outline: none;
+        transition: box-shadow 0.12s, border-color 0.12s;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+      }
+      textarea {
+        resize: vertical;
+        min-height: 56px;
+      }
+      input::placeholder,
+      textarea::placeholder,
+      select[placeholder] {
+        color: var(--muted-300);
+      }
+      input:focus,
+      textarea:focus,
+      select:focus {
+        box-shadow: 0 6px 20px rgba(11, 110, 230, 0.12);
+        border-color: var(--accent-blue);
+      }
+      button {
+        appearance: none;
+        -webkit-appearance: none;
+        border: 0;
+        cursor: pointer;
+        padding: 9px 14px;
+        border-radius: 8px;
+        font-weight: 700;
+        color: var(--white);
+        background: linear-gradient(180deg, var(--accent-blue), var(--accent-blue-600));
+        box-shadow: 0 6px 16px rgba(11, 110, 230, 0.18);
+        transition: transform 0.08s ease, box-shadow 0.12s ease;
+      }
+      button:hover {
+        transform: translateY(-2px);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      button.ghost {
+        background: transparent;
+        color: var(--accent-blue);
+        border: 1px solid rgba(11, 110, 230, 0.12);
+        box-shadow: none;
+      }
+      button.danger {
+        background: linear-gradient(180deg, var(--danger), #c83b3b);
+        color: var(--white);
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .right {
+        margin-left: auto;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .small {
+        font-size: 13px;
+        color: var(--muted-300);
+      }
+      .muted {
+        color: var(--muted-400);
+        font-size: 13px;
+      }
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .summary .item {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+        border: 1px solid rgba(255, 255, 255, 0.02);
+        padding: 12px;
+        border-radius: 8px;
+        text-align: left;
+        color: var(--white);
+      }
+      .summary .item .muted {
+        color: var(--muted-300);
+        font-weight: 600;
+      }
+      .services {
+        max-height: 68vh;
+        overflow: auto;
+        margin-top: 12px;
+        border-radius: 8px;
+        padding: 6px;
+      }
+      .service-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        align-items: center;
+        background: transparent;
+      }
+      .service-row:last-child {
+        border-bottom: 0;
+      }
+      .service-row:hover {
+        background: rgba(255, 255, 255, 0.01);
+      }
+      .meta {
+        font-size: 13px;
+        color: var(--muted-300);
+      }
+      .service-row .qty {
+        font-weight: 700;
+        color: var(--accent-blue);
+      }
+      .service-row button.ghost {
+        padding: 6px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        color: var(--accent-blue);
+        background: transparent;
+        border: 1px solid rgba(11, 110, 230, 0.08);
+      }
+
+      /* Thumbnails */
+      .thumbs {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+      .thumb {
+        width: 72px;
+        height: 54px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        background: #070707;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      /* Lightbox basics */
+      .lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.18s, visibility 0.18s;
+      }
+      .lightbox.open {
+        visibility: visible;
+        opacity: 1;
+      }
+      .lightbox img {
+        max-width: 92%;
+        max-height: 92%;
+        border-radius: 8px;
+        box-shadow: 0 8px 30px rgba(2, 6, 23, 0.8);
+      }
+
+      /* Upload hint */
+      .file-hint {
+        font-size: 13px;
+        color: var(--muted-300);
+        margin-top: 6px;
+      }
+
+      /* Left decorative vertical stripe similar to logo */
+      .left-stripe {
+        position: fixed;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 14px;
+        height: 320px;
+        border-radius: 10px;
+        background-image: repeating-linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.1) 0 8px,
+          rgba(255, 255, 255, 0.02) 8px 16px
+        );
+        box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+        display: none;
+      }
+      @media (min-width: 980px) {
+        .left-stripe {
+          display: block;
+        }
+      }
+      @media (max-width: 980px) {
+        .grid {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+        .summary {
+          grid-template-columns: repeat(1, 1fr);
+        }
+        .right {
+          margin-left: 0;
+        }
+        body {
+          padding: 18px;
+        }
+      }
+      input[type="month"] {
+        width: 160px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="left-stripe" aria-hidden="true"></div>
+    <div class="container">
+      <header>
+        <div class="logo-mark" aria-hidden="true"></div>
+        <div>
+          <h1>Contabilizador de Rodas</h1>
+          <div class="subtitle">Centro Automotivo TransPneus — controle rápido dos serviços</div>
+        </div>
+      </header>
+
+  <main>
+  <div class="grid">
+        <div class="card">
+          <form id="form">
+            <label for="date">Data do serviço</label>
+            <input type="date" id="date" required />
+
+            <label for="desc">Descrição do serviço</label>
+            <textarea
+              id="desc"
+              rows="2"
+              placeholder="Ex: Retífica, balanceamento..."
+              required
+            ></textarea>
+
+            <label for="qty">Quantidade de rodas</label>
+            <input type="number" id="qty" min="1" value="1" required />
+
+            <label for="worker">Colaborador</label>
+            <select id="worker" required>
+              <option value="">Selecione...</option>
+              <option value="Luís">Luís</option>
+              <option value="Dune">Dune</option>
+            </select>
+
+            <label for="photos">Fotos do serviço (opcional)</label>
+            <input type="file" id="photos" accept="image/*" multiple />
+            <div class="file-hint">
+              Escolha até 6 fotos por serviço; imagens grandes aumentam o uso de armazenamento local
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 12px">
+              <button type="submit">Adicionar serviço</button>
+              <button type="button" id="clear" class="ghost">Limpar tudo</button>
+              <button type="button" id="export" class="ghost">Exportar CSV</button>
+            </div>
+          </form>
+
+          <div style="margin-top: 12px">
+            <div class="controls">
+              <label for="filterMonth" style="margin: 0">Filtrar mês</label>
+              <input type="month" id="filterMonth" />
+              <label for="filterWorker" style="margin: 0">Colaborador</label>
+              <select id="filterWorker">
+                <option value="">Todos</option>
+                <option value="Luís">Luís</option>
+                <option value="Dune">Dune</option>
+              </select>
+              <button id="applyFilter" class="ghost">Aplicar</button>
+              <button id="resetFilter" class="ghost">Resetar</button>
+              <div class="right">
+                <span class="small muted">Valor por roda</span>
+                <strong style="margin-left: 8px">R$ 6,00</strong>
+              </div>
+            </div>
+
+            <div class="summary" id="summary"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <strong>Serviços registrados</strong>
+            <span class="muted small" id="countText">0 serviços</span>
+          </div>
+
+          <div class="services" id="servicesList"></div>
+        </div>
+      </div>
+        </main>
+    </div>
+
+    <!-- lightbox -->
+    <div id="lightbox" class="lightbox" role="dialog" aria-hidden="true">
+      <img
+        id="lightboxImg"
+        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+        alt="Foto do serviço"
+      />
+    </div>
+
+    <script>
+      const STORAGE_KEY = "contabilizador_roda_servicos_v3_photos";
+      const PRICE_PER_WHEEL = 6;
+      const WORKERS = ["Luís", "Dune"];
+      const MAX_PHOTOS_PER_SERVICE = 6; // sugestão
+
+      let services = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+      const form = document.getElementById("form");
+      const dateInput = document.getElementById("date");
+      const descInput = document.getElementById("desc");
+      const qtyInput = document.getElementById("qty");
+      const workerInput = document.getElementById("worker");
+      const photosInput = document.getElementById("photos");
+      const servicesList = document.getElementById("servicesList");
+      const summaryEl = document.getElementById("summary");
+      const countText = document.getElementById("countText");
+      const filterMonth = document.getElementById("filterMonth");
+      const filterWorker = document.getElementById("filterWorker");
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImg = document.getElementById("lightboxImg");
+
+      function save() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
+        render();
+      }
+
+      // read files as data URLs (limited number)
+      function readFilesAsDataURLs(fileList) {
+        const files = Array.from(fileList).slice(0, MAX_PHOTOS_PER_SERVICE);
+        return Promise.all(
+          files.map(
+            file =>
+              new Promise((res, rej) => {
+                const reader = new FileReader();
+                reader.onload = () => res({ name: file.name, dataUrl: reader.result });
+                reader.onerror = rej;
+                reader.readAsDataURL(file);
+              })
+          )
+        );
+      }
+
+      async function addService(e) {
+        e.preventDefault();
+        const d = dateInput.value || new Date().toISOString().slice(0, 10);
+        const desc = descInput.value.trim();
+        const qty = Math.max(1, parseInt(qtyInput.value, 10) || 1);
+        const worker = workerInput.value;
+
+        // read photos if any
+        let photos = [];
+        if (photosInput.files && photosInput.files.length > 0) {
+          try {
+            photos = await readFilesAsDataURLs(photosInput.files);
+          } catch (err) {
+            alert("Erro ao ler imagens. Tente novamente.");
+            photos = [];
+          }
+        }
+
+        const item = {
+          id: Date.now().toString(),
+          date: d,
+          desc,
+          qty,
+          worker,
+          photos, // array of {name, dataUrl}
+        };
+
+        services.unshift(item);
+        form.reset();
+        qtyInput.value = 1;
+        save();
+        // clear file input (for some browsers)
+        photosInput.value = "";
+      }
+
+      function removeService(id) {
+        if (!confirm("Excluir este serviço?")) return;
+        services = services.filter(s => s.id !== id);
+        save();
+      }
+
+      function formatDate(d) {
+        const dt = new Date(d + "T00:00:00");
+        return dt.toLocaleDateString();
+      }
+
+      function calcTotals(list) {
+        const totalRodas = list.reduce((s, i) => s + (i.qty || 0), 0);
+        const totalServ = list.length;
+        const ganho = totalRodas * PRICE_PER_WHEEL;
+        return { totalRodas, totalServ, ganho };
+      }
+
+      function filterList(monthKey, workerKey) {
+        let list = services.slice();
+        if (monthKey) list = list.filter(s => s.date.slice(0, 7) === monthKey);
+        if (workerKey) list = list.filter(s => s.worker === workerKey);
+        return list;
+      }
+
+      function renderSummary(filteredMonthKey = null, filteredWorkerKey = "") {
+        summaryEl.innerHTML = "";
+        const global = calcTotals(filterList(null, ""));
+        const filteredByMonth = filteredMonthKey ? filterList(filteredMonthKey, "") : [];
+        const monthTotals = filteredMonthKey
+          ? calcTotals(filteredByMonth)
+          : { totalRodas: "-", totalServ: "-", ganho: "-" };
+        const filteredByBoth = filterList(filteredMonthKey, filteredWorkerKey);
+        const bothTotals =
+          filteredMonthKey || filteredWorkerKey ? calcTotals(filteredByBoth) : null;
+
+        const cards = [
+          { title: "Rodas totais", value: global.totalRodas },
+          { title: "Serviços totais", value: global.totalServ },
+          { title: "Ganho total", value: "R$ " + global.ganho.toFixed(2) },
+          {
+            title: filteredMonthKey ? `Rodas em ${filteredMonthKey}` : "Rodas no mês",
+            value: monthTotals.totalRodas,
+          },
+          {
+            title: filteredMonthKey ? `Serviços em ${filteredMonthKey}` : "Serviços no mês",
+            value: monthTotals.totalServ,
+          },
+          {
+            title: filteredMonthKey ? `Ganho em ${filteredMonthKey}` : "Ganho no mês",
+            value: monthTotals.ganho !== "-" ? "R$ " + monthTotals.ganho.toFixed(2) : "-",
+          },
+        ];
+
+        cards.forEach(c => {
+          const el = document.createElement("div");
+          el.className = "item";
+          el.innerHTML = `<div class="muted">${c.title}</div><div style="font-weight:600;margin-top:6px">${c.value}</div>`;
+          summaryEl.appendChild(el);
+        });
+
+        WORKERS.forEach(w => {
+          const arr = services.filter(s => s.worker === w);
+          const t = calcTotals(arr);
+          const el = document.createElement("div");
+          el.className = "item";
+          el.innerHTML = `<div class="muted">Colaborador ${w} (geral)</div><div style="font-weight:600;margin-top:6px">${t.totalRodas} rodas; ${t.totalServ} serviços</div>`;
+          summaryEl.appendChild(el);
+        });
+
+        if (filteredMonthKey) {
+          WORKERS.forEach(w => {
+            const arr = services.filter(
+              s => s.worker === w && s.date.slice(0, 7) === filteredMonthKey
+            );
+            const t = calcTotals(arr);
+            const el = document.createElement("div");
+            el.className = "item";
+            el.innerHTML = `<div class="muted">Colaborador ${w} em ${filteredMonthKey}</div><div style="font-weight:600;margin-top:6px">${
+              t.totalRodas
+            } rodas; ${t.totalServ} serviços; R$ ${t.ganho.toFixed(2)}</div>`;
+            summaryEl.appendChild(el);
+          });
+        }
+
+        if (bothTotals) {
+          const el = document.createElement("div");
+          el.className = "item";
+          const workerLabel = filteredWorkerKey ? filteredWorkerKey : "Todos";
+          const monthLabel = filteredMonthKey ? filteredMonthKey : "Todos";
+          el.innerHTML = `<div class="muted">Resultado para ${workerLabel} - ${monthLabel}</div><div style="font-weight:600;margin-top:6px">${
+            bothTotals.totalRodas
+          } rodas; ${bothTotals.totalServ} serviços; R$ ${bothTotals.ganho.toFixed(2)}</div>`;
+          summaryEl.appendChild(el);
+        }
+      }
+
+      function openLightbox(dataUrl) {
+        lightboxImg.src = dataUrl;
+        lightbox.classList.add("open");
+        lightbox.setAttribute("aria-hidden", "false");
+      }
+      function closeLightbox() {
+        lightbox.classList.remove("open");
+        lightbox.setAttribute("aria-hidden", "true");
+        lightboxImg.src = "";
+      }
+      lightbox.addEventListener("click", closeLightbox);
+      document.addEventListener("keydown", e => {
+        if (e.key === "Escape") closeLightbox();
+      });
+
+      function renderList(filteredMonthKey = null, filteredWorkerKey = "") {
+        servicesList.innerHTML = "";
+        let list = services.slice();
+        if (filteredMonthKey) list = list.filter(s => s.date.slice(0, 7) === filteredMonthKey);
+        if (filteredWorkerKey) list = list.filter(s => s.worker === filteredWorkerKey);
+        countText.textContent = list.length + " serviços";
+
+        if (list.length === 0) {
+          servicesList.innerHTML =
+            '<div class="small muted" style="padding:12px">Nenhum serviço registrado</div>';
+          return;
+        }
+
+        list.forEach(s => {
+          const row = document.createElement("div");
+          row.className = "service-row";
+          const photosHtml =
+            s.photos && s.photos.length > 0
+              ? `
+<div class="thumbs">
+${s.photos
+  .slice(0, 6)
+  .map(
+    (p, idx) =>
+      `<div class="thumb" data-service="${s.id}" data-idx="${idx}"><img src="${p.dataUrl}" alt="${p.name}"></div>`
+  )
+  .join("")}
+</div>
+`
+              : "";
+
+          row.innerHTML = `
+<div style="min-width:0;max-width:68%">
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+<div style="font-weight:700">${s.worker}</div>
+<div class="small muted">• ${formatDate(s.date)}</div>
+</div>
+<div class="meta" style="margin-top:6px">${s.desc}</div>
+<div class="small muted" style="margin-top:6px"><span class="qty">${s.qty}</span> rodas · R$ ${(
+            s.qty * PRICE_PER_WHEEL
+          ).toFixed(2)}</div>
+${photosHtml}
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+<button class="ghost" data-id="${s.id}" aria-label="Excluir serviço">Excluir</button>
+<div class="small muted">${s.photos ? s.photos.length : 0} fotos</div>
+</div>
+`;
+          servicesList.appendChild(row);
+        });
+
+        // attach delete handlers
+        servicesList.querySelectorAll("button[data-id]").forEach(btn => {
+          btn.addEventListener("click", () => removeService(btn.dataset.id));
+        });
+
+        // attach thumbnail click to open lightbox
+        servicesList.querySelectorAll(".thumb").forEach(t => {
+          t.addEventListener("click", () => {
+            const svc = t.getAttribute("data-service");
+            const idx = parseInt(t.getAttribute("data-idx"), 10);
+            const s = services.find(x => x.id === svc);
+            if (!s || !s.photos || !s.photos[idx]) return;
+            openLightbox(s.photos[idx].dataUrl);
+          });
+        });
+      }
+
+      function render() {
+        const month = filterMonth.value || null;
+        const worker = filterWorker.value || "";
+        renderSummary(month, worker);
+        renderList(month, worker);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
+      }
+
+      // export CSV (adds images_count column)
+      function exportCSV() {
+        if (services.length === 0) {
+          alert("Nenhum serviço para exportar");
+          return;
+        }
+        const header = ["id", "date", "worker", "qty", "desc", "images_count"];
+        const rows = services.map(s =>
+          header
+            .map(h => {
+              let v = "";
+              if (h === "images_count") v = s.photos ? String(s.photos.length) : "0";
+              else v = s[h] !== undefined ? String(s[h]).replace(/"/g, '""') : "";
+              return `"${v}"`;
+            })
+            .join(",")
+        );
+        const csv = [header.join(","), ...rows].join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "servicos_roda.csv";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // events
+      form.addEventListener("submit", addService);
+      document.getElementById("clear").addEventListener("click", () => {
+        if (!confirm("Apagar todos os serviços?")) return;
+        services = [];
+        save();
+      });
+      document.getElementById("applyFilter").addEventListener("click", () => {
+        render();
+      });
+      document.getElementById("resetFilter").addEventListener("click", () => {
+        filterMonth.value = "";
+        filterWorker.value = "";
+        render();
+      });
+      document.getElementById("export").addEventListener("click", exportCSV);
+
+      // inicial
+      render();
+    </script>
+    <script>
+      // register service worker for PWA install/offline support only on secure contexts / localhost
+      if (
+        'serviceWorker' in navigator &&
+        (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ) {
+        navigator.serviceWorker
+          .register('/service-worker.js')
+          .then(reg => {
+            console.log('Service worker registered', reg.scope);
+          })
+          .catch(err => console.warn('SW register failed', err));
+      }
+
+      // optional: prompt handler for beforeinstallprompt
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        console.log('beforeinstallprompt fired');
+        // You could show an install button and call e.prompt() on click
+      });
+    </script>
+  </body>
+</html>

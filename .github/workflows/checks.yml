@@ -1,0 +1,48 @@
+name: CI — checks
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    name: Run HTML/JS checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install Chromium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run checks
+        env:
+          CHROME_BIN: /usr/bin/chromium-browser
+        run: npm run check
+
+      - name: Upload axe report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: axe-report
+          path: reports/axe-report.json

@@ -1,0 +1,7 @@
+node_modules
+coverage
+dist
+__page_screenshot.png
+.github
+npm-debug.log
+package-lock.json
