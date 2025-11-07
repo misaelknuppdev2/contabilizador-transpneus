@@ -667,7 +667,7 @@
 
         if (list.length === 0) {
           const emptyMsg = isFiltered
-            ? 'Nenhum serviço encontrado com os filtros aplicados. Clique em "Resetar" para ver todos.'
+            ? "Nenhum serviço encontrado com os filtros aplicados. Ajuste as opções acima para visualizar outros registros."
             : "Nenhum serviço registrado";
           servicesList.innerHTML = `<div class="small muted" style="padding:12px">${emptyMsg}</div>`;
           return;
@@ -680,7 +680,7 @@
           const hidden = totalServices - list.length;
           info.textContent = `Há ${hidden} ${formatServiceWord(
             hidden
-          )} fora da visão atual; clique em "Resetar" para visualizar tudo.`;
+          )} fora da visão atual. Ajuste os filtros acima para visualizar todos.`;
           servicesList.appendChild(info);
         }
 
