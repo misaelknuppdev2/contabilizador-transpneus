@@ -421,8 +421,6 @@
                   <option value="Luís">Luís</option>
                   <option value="Dune">Dune</option>
                 </select>
-                <button id="applyFilter" class="ghost">Aplicar</button>
-                <button id="resetFilter" class="ghost">Resetar</button>
                 <div class="right">
                   <span class="small muted">Valor por roda</span>
                   <strong style="margin-left: 8px">R$ 6,00</strong>
@@ -461,7 +459,6 @@
       const MAX_PHOTOS_PER_SERVICE = 6; // sugestão
 
       let services = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      let activeFilters = { month: null, worker: "" };
 
       const form = document.getElementById("form");
       const dateInput = document.getElementById("date");
@@ -532,8 +529,6 @@
         services.unshift(item);
         form.reset();
         qtyInput.value = 1;
-        // reset filtros ativos para que o novo serviço apareça de imediato
-        activeFilters = { month: null, worker: "" };
         filterMonth.value = "";
         filterWorker.value = "";
         save();
@@ -745,8 +740,8 @@ ${photosHtml}
       }
 
       function render() {
-        const month = activeFilters.month;
-        const worker = activeFilters.worker;
+        const month = filterMonth.value || null;
+        const worker = filterWorker.value || "";
         renderSummary(month, worker);
         renderList(month, worker);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
@@ -788,19 +783,9 @@ ${photosHtml}
         services = [];
         save();
       });
-      document.getElementById("applyFilter").addEventListener("click", () => {
-        activeFilters = {
-          month: filterMonth.value || null,
-          worker: filterWorker.value || "",
-        };
-        render();
-      });
-      document.getElementById("resetFilter").addEventListener("click", () => {
-        filterMonth.value = "";
-        filterWorker.value = "";
-        activeFilters = { month: null, worker: "" };
-        render();
-      });
+      filterMonth.addEventListener("change", render);
+      filterMonth.addEventListener("input", render);
+      filterWorker.addEventListener("change", render);
       document.getElementById("export").addEventListener("click", exportCSV);
 
       // inicial
