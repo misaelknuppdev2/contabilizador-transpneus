@@ -14,21 +14,20 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Contabilizador de Rodas - TransPneus</title>
     <style>
-      :root {
-        --bg-900: #000000;
-        --panel-800: #0f1720;
-        --panel-700: #111827;
-        --card-600: #0b1220;
-        --accent-blue: #0b6ee6;
-        --accent-blue-600: #0a5bd0;
-        --muted-400: #9aa4b2;
-        --muted-300: #c5ccd3;
-        --white: #ffffff;
-        --danger: #e55353;
-        --glass: rgba(255, 255, 255, 0.04);
-        --radius: 10px;
-        --shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
-        --glass-border: rgba(255, 255, 255, 0.03);
+      button {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border: 0;
+        cursor: pointer;
+        padding: 9px 14px;
+        border-radius: 8px;
+        font-weight: 700;
+        color: var(--white);
+        background: linear-gradient(180deg, var(--accent-blue), var(--accent-blue-600));
+        box-shadow: 0 6px 16px rgba(11, 110, 230, 0.18);
+        transition: transform 0.08s ease, box-shadow 0.12s ease;
+      }
       }
 
       * {
@@ -46,7 +45,7 @@
         color: var(--white);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        padding: 28px;
+        padding: clamp(16px, 4vw, 28px);
       }
 
       .container {
@@ -103,7 +102,6 @@
       }
       .grid {
         display: grid;
-        grid-template-columns: 1fr 380px;
         gap: 20px;
         align-items: start;
       }
@@ -122,7 +120,6 @@
         font-weight: 600;
       }
       input[type="date"],
-      input[type="month"],
       input[type="number"],
       select,
       textarea,
@@ -137,9 +134,9 @@
         font-size: 14px;
         outline: none;
         transition: box-shadow 0.12s, border-color 0.12s;
-        appearance: none;
         -webkit-appearance: none;
         -moz-appearance: none;
+        appearance: none;
       }
       textarea {
         resize: vertical;
@@ -157,8 +154,9 @@
         border-color: var(--accent-blue);
       }
       button {
-        appearance: none;
         -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
         border: 0;
         cursor: pointer;
         padding: 9px 14px;
@@ -210,7 +208,7 @@
       }
       .summary {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: 10px;
         margin-top: 12px;
       }
@@ -247,9 +245,7 @@
         justify-content: space-between;
         align-items: center;
       }
-      .empty-state {
-        padding: 12px;
-      }
+      .empty-state,
       .info-banner {
         padding: 12px;
       }
@@ -391,27 +387,25 @@
         box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
         display: none;
       }
-      @media (min-width: 980px) {
+      @media (min-width: 960px) {
+        .grid {
+          grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+        }
         .left-stripe {
           display: block;
         }
       }
-      @media (max-width: 980px) {
-        .grid {
-          grid-template-columns: 1fr;
+      @media (max-width: 720px) {
+        header {
+          align-items: flex-start;
+          flex-direction: column;
           gap: 12px;
-        }
-        .summary {
-          grid-template-columns: repeat(1, 1fr);
         }
         .right {
           margin-left: 0;
         }
-        body {
-          padding: 18px;
-        }
       }
-      input[type="month"] {
+      #filterMonth {
         width: 160px;
       }
     </style>
@@ -540,6 +534,42 @@
         return count === 1 ? "serviço" : "serviços";
       }
 
+      function formatCurrency(amount) {
+        return `R$ ${amount.toFixed(2)}`;
+      }
+
+      function getMonthKey(entry) {
+        return entry.date.slice(0, 7);
+      }
+
+      function summaryItem(title, value) {
+        return `<div class="item"><div class="muted">${title}</div><div class="summary-value">${value}</div></div>`;
+      }
+
+      function createServiceRowHtml(service) {
+        const total = formatCurrency(service.qty * PRICE_PER_WHEEL);
+        const thumbs = (service.photos || [])
+          .slice(0, MAX_PHOTOS_PER_SERVICE)
+          .map(
+            (photo, idx) =>
+              `<div class="thumb" data-service="${service.id}" data-idx="${idx}"><img src="${photo.dataUrl}" alt="${photo.name}"></div>`
+          )
+          .join("");
+        const photosBlock = thumbs ? `<div class="thumbs">${thumbs}</div>` : "";
+        const photosCount = service.photos ? service.photos.length : 0;
+        return `<div class="service-row"><div class="service-card-content"><div class="service-row-meta"><div class="service-worker">${
+          service.worker
+        }</div><div class="small muted">• ${formatDate(
+          service.date
+        )}</div></div><div class="meta service-desc">${
+          service.desc
+        }</div><div class="small muted service-total"><span class="qty">${
+          service.qty
+        }</span> rodas · ${total}</div>${photosBlock}</div><div class="service-actions"><button class="ghost" data-id="${
+          service.id
+        }" aria-label="Excluir serviço">Excluir</button><div class="small muted">${photosCount} fotos</div></div></div>`;
+      }
+
       function normalizeMonthValue(value) {
         if (!value) return "";
         const trimmed = value.trim();
@@ -552,6 +582,15 @@
       function extractValidMonth(value) {
         const trimmed = value.trim();
         return /^\d{4}-\d{2}$/.test(trimmed) ? trimmed : "";
+      }
+
+      function getActiveFilters() {
+        const normalized = normalizeMonthValue(filterMonth.value);
+        if (normalized !== filterMonth.value) filterMonth.value = normalized;
+        return {
+          month: extractValidMonth(normalized) || null,
+          worker: filterWorker.value || "",
+        };
       }
 
       function save() {
@@ -631,82 +670,59 @@
       }
 
       function filterList(monthKey, workerKey) {
-        let list = services.slice();
-        if (monthKey) list = list.filter(s => s.date.slice(0, 7) === monthKey);
-        if (workerKey) list = list.filter(s => s.worker === workerKey);
-        return list;
+        return services.filter(
+          s => (!monthKey || getMonthKey(s) === monthKey) && (!workerKey || s.worker === workerKey)
+        );
       }
 
-      function renderSummary(filteredMonthKey = null, filteredWorkerKey = "") {
-        summaryEl.innerHTML = "";
-        const global = calcTotals(filterList(null, ""));
-        const filteredByMonth = filteredMonthKey ? filterList(filteredMonthKey, "") : [];
-        const monthTotals = filteredMonthKey
-          ? calcTotals(filteredByMonth)
-          : { totalRodas: "-", totalServ: "-", ganho: "-" };
-        const filteredByBoth = filterList(filteredMonthKey, filteredWorkerKey);
-        const bothTotals =
-          filteredMonthKey || filteredWorkerKey ? calcTotals(filteredByBoth) : null;
+      function renderSummary(monthKey = null, workerKey = "") {
+        const globalTotals = calcTotals(services);
+        const monthTotals = monthKey ? calcTotals(filterList(monthKey)) : null;
+        const filteredTotals =
+          monthKey || workerKey ? calcTotals(filterList(monthKey, workerKey)) : null;
+        const monthLabel = monthKey ? ` em ${monthKey}` : " no mês";
 
-        const cards = [
-          { title: "Rodas totais", value: global.totalRodas },
-          { title: "Serviços totais", value: global.totalServ },
-          { title: "Ganho total", value: "R$ " + global.ganho.toFixed(2) },
-          {
-            title: filteredMonthKey ? `Rodas em ${filteredMonthKey}` : "Rodas no mês",
-            value: monthTotals.totalRodas,
-          },
-          {
-            title: filteredMonthKey ? `Serviços em ${filteredMonthKey}` : "Serviços no mês",
-            value: monthTotals.totalServ,
-          },
-          {
-            title: filteredMonthKey ? `Ganho em ${filteredMonthKey}` : "Ganho no mês",
-            value: monthTotals.ganho !== "-" ? "R$ " + monthTotals.ganho.toFixed(2) : "-",
-          },
-        ];
+        let html = [
+          summaryItem("Rodas totais", globalTotals.totalRodas),
+          summaryItem("Serviços totais", globalTotals.totalServ),
+          summaryItem("Ganho total", formatCurrency(globalTotals.ganho)),
+          summaryItem(`Rodas${monthLabel}`, monthTotals ? monthTotals.totalRodas : "-"),
+          summaryItem(`Serviços${monthLabel}`, monthTotals ? monthTotals.totalServ : "-"),
+          summaryItem(`Ganho${monthLabel}`, monthTotals ? formatCurrency(monthTotals.ganho) : "-"),
+        ].join("");
 
-        cards.forEach(c => {
-          const el = document.createElement("div");
-          el.className = "item";
-          el.innerHTML = `<div class="muted">${c.title}</div><div class="summary-value">${c.value}</div>`;
-          summaryEl.appendChild(el);
-        });
+        html += WORKERS.map(worker => {
+          const totals = calcTotals(filterList(null, worker));
+          return summaryItem(
+            `Colaborador ${worker} (geral)`,
+            `${totals.totalRodas} rodas; ${totals.totalServ} serviços`
+          );
+        }).join("");
 
-        WORKERS.forEach(w => {
-          const arr = services.filter(s => s.worker === w);
-          const t = calcTotals(arr);
-          const el = document.createElement("div");
-          el.className = "item";
-          el.innerHTML = `<div class="muted">Colaborador ${w} (geral)</div><div class="summary-value">${t.totalRodas} rodas; ${t.totalServ} serviços</div>`;
-          summaryEl.appendChild(el);
-        });
-
-        if (filteredMonthKey) {
-          WORKERS.forEach(w => {
-            const arr = services.filter(
-              s => s.worker === w && s.date.slice(0, 7) === filteredMonthKey
+        if (monthTotals) {
+          html += WORKERS.map(worker => {
+            const totals = calcTotals(filterList(monthKey, worker));
+            return summaryItem(
+              `Colaborador ${worker} em ${monthKey}`,
+              `${totals.totalRodas} rodas; ${totals.totalServ} serviços; ${formatCurrency(
+                totals.ganho
+              )}`
             );
-            const t = calcTotals(arr);
-            const el = document.createElement("div");
-            el.className = "item";
-            el.innerHTML = `<div class="muted">Colaborador ${w} em ${filteredMonthKey}</div><div class="summary-value">${
-              t.totalRodas
-            } rodas; ${t.totalServ} serviços; R$ ${t.ganho.toFixed(2)}</div>`;
-            summaryEl.appendChild(el);
-          });
+          }).join("");
         }
 
-        if (bothTotals) {
-          const el = document.createElement("div");
-          el.className = "item";
-          const workerLabel = filteredWorkerKey ? filteredWorkerKey : "Todos";
-          const monthLabel = filteredMonthKey ? filteredMonthKey : "Todos";
-          el.innerHTML = `<div class="muted">Resultado para ${workerLabel} - ${monthLabel}</div><div class="summary-value">${
-            bothTotals.totalRodas
-          } rodas; ${bothTotals.totalServ} serviços; R$ ${bothTotals.ganho.toFixed(2)}</div>`;
-          summaryEl.appendChild(el);
+        if (filteredTotals) {
+          const workerLabel = workerKey || "Todos";
+          const monthLabelFiltered = monthKey || "Todos";
+          html += summaryItem(
+            `Resultado para ${workerLabel} - ${monthLabelFiltered}`,
+            `${filteredTotals.totalRodas} rodas; ${
+              filteredTotals.totalServ
+            } serviços; ${formatCurrency(filteredTotals.ganho)}`
+          );
         }
+
+        summaryEl.innerHTML = html;
       }
 
       function openLightbox(dataUrl) {
@@ -724,24 +740,19 @@
         if (e.key === "Escape") closeLightbox();
       });
 
-      function renderList(filteredMonthKey = null, filteredWorkerKey = "") {
-        servicesList.innerHTML = "";
-        let list = services.slice();
-        if (filteredMonthKey) list = list.filter(s => s.date.slice(0, 7) === filteredMonthKey);
-        if (filteredWorkerKey) list = list.filter(s => s.worker === filteredWorkerKey);
-
+      function renderList(monthKey = null, workerKey = "") {
+        const list = filterList(monthKey, workerKey);
         const totalServices = services.length;
-        const isFiltered = Boolean(filteredMonthKey || filteredWorkerKey);
+        const isFiltered = Boolean(monthKey || workerKey);
         const countLabel = `${list.length} ${formatServiceWord(list.length)}`;
 
-        if (isFiltered) {
-          const totalLabel = `${totalServices} ${formatServiceWord(totalServices)}`;
-          countText.textContent = `${countLabel} filtrados (de ${totalLabel} no total)`;
-        } else {
-          countText.textContent = countLabel;
-        }
+        countText.textContent = isFiltered
+          ? `${countLabel} filtrados (de ${totalServices} ${formatServiceWord(
+              totalServices
+            )} no total)`
+          : countLabel;
 
-        if (list.length === 0) {
+        if (!list.length) {
           const emptyMsg = isFiltered
             ? "Nenhum serviço encontrado com os filtros aplicados. Ajuste as opções acima para visualizar outros registros."
             : "Nenhum serviço registrado";
@@ -749,81 +760,40 @@
           return;
         }
 
-        if (isFiltered && list.length < totalServices) {
-          const info = document.createElement("div");
-          info.className = "small muted info-banner";
-          const hidden = totalServices - list.length;
-          info.textContent = `Há ${hidden} ${formatServiceWord(
-            hidden
-          )} fora da visão atual. Ajuste os filtros acima para visualizar todos.`;
-          servicesList.appendChild(info);
-        }
+        const infoBanner =
+          isFiltered && list.length < totalServices
+            ? `<div class="small muted info-banner">Há ${
+                totalServices - list.length
+              } ${formatServiceWord(
+                totalServices - list.length
+              )} fora da visão atual. Ajuste os filtros acima para visualizar todos.</div>`
+            : "";
 
-        list.forEach(s => {
-          const row = document.createElement("div");
-          row.className = "service-row";
-          const photosHtml =
-            s.photos && s.photos.length > 0
-              ? `
-<div class="thumbs">
-${s.photos
-  .slice(0, 6)
-  .map(
-    (p, idx) =>
-      `<div class="thumb" data-service="${s.id}" data-idx="${idx}"><img src="${p.dataUrl}" alt="${p.name}"></div>`
-  )
-  .join("")}
-</div>
-`
-              : "";
-
-          row.innerHTML = `
-<div class="service-card-content">
-<div class="service-row-meta">
-<div class="service-worker">${s.worker}</div>
-<div class="small muted">• ${formatDate(s.date)}</div>
-</div>
-<div class="meta service-desc">${s.desc}</div>
-<div class="small muted service-total"><span class="qty">${s.qty}</span> rodas · R$ ${(
-            s.qty * PRICE_PER_WHEEL
-          ).toFixed(2)}</div>
-${photosHtml}
-</div>
-<div class="service-actions">
-<button class="ghost" data-id="${s.id}" aria-label="Excluir serviço">Excluir</button>
-<div class="small muted">${s.photos ? s.photos.length : 0} fotos</div>
-</div>
-`;
-          servicesList.appendChild(row);
-        });
-
-        // attach delete handlers
-        servicesList.querySelectorAll("button[data-id]").forEach(btn => {
-          btn.addEventListener("click", () => removeService(btn.dataset.id));
-        });
-
-        // attach thumbnail click to open lightbox
-        servicesList.querySelectorAll(".thumb").forEach(t => {
-          t.addEventListener("click", () => {
-            const svc = t.getAttribute("data-service");
-            const idx = parseInt(t.getAttribute("data-idx"), 10);
-            const s = services.find(x => x.id === svc);
-            if (!s || !s.photos || !s.photos[idx]) return;
-            openLightbox(s.photos[idx].dataUrl);
-          });
-        });
+        const rowsHtml = list.map(createServiceRowHtml).join("");
+        servicesList.innerHTML = infoBanner + rowsHtml;
       }
 
-      function render() {
-        const monthValue = extractValidMonth(filterMonth.value);
-        if (monthValue && filterMonth.value !== monthValue) {
-          filterMonth.value = monthValue;
+      servicesList.addEventListener("click", event => {
+        const deleteBtn = event.target.closest("button[data-id]");
+        if (deleteBtn) {
+          removeService(deleteBtn.dataset.id);
+          return;
         }
-        const month = monthValue || null;
-        const worker = filterWorker.value || "";
+
+        const thumb = event.target.closest(".thumb");
+        if (thumb) {
+          const svc = services.find(s => s.id === thumb.dataset.service);
+          const idx = Number(thumb.dataset.idx);
+          if (svc && svc.photos && svc.photos[idx]) {
+            openLightbox(svc.photos[idx].dataUrl);
+          }
+        }
+      });
+
+      function render() {
+        const { month, worker } = getActiveFilters();
         renderSummary(month, worker);
         renderList(month, worker);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
       }
 
       // export CSV (adds images_count column)
