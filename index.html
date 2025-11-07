@@ -461,6 +461,7 @@
       const MAX_PHOTOS_PER_SERVICE = 6; // sugestão
 
       let services = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      let activeFilters = { month: null, worker: "" };
 
       const form = document.getElementById("form");
       const dateInput = document.getElementById("date");
@@ -475,6 +476,10 @@
       const filterWorker = document.getElementById("filterWorker");
       const lightbox = document.getElementById("lightbox");
       const lightboxImg = document.getElementById("lightboxImg");
+
+      function formatServiceWord(count) {
+        return count === 1 ? "serviço" : "serviços";
+      }
 
       function save() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
@@ -649,12 +654,35 @@
         let list = services.slice();
         if (filteredMonthKey) list = list.filter(s => s.date.slice(0, 7) === filteredMonthKey);
         if (filteredWorkerKey) list = list.filter(s => s.worker === filteredWorkerKey);
-        countText.textContent = list.length + " serviços";
+
+        const totalServices = services.length;
+        const isFiltered = Boolean(filteredMonthKey || filteredWorkerKey);
+        const countLabel = `${list.length} ${formatServiceWord(list.length)}`;
+
+        if (isFiltered) {
+          const totalLabel = `${totalServices} ${formatServiceWord(totalServices)}`;
+          countText.textContent = `${countLabel} filtrados (de ${totalLabel} no total)`;
+        } else {
+          countText.textContent = countLabel;
+        }
 
         if (list.length === 0) {
-          servicesList.innerHTML =
-            '<div class="small muted" style="padding:12px">Nenhum serviço registrado</div>';
+          const emptyMsg = isFiltered
+            ? 'Nenhum serviço encontrado com os filtros aplicados. Clique em "Resetar" para ver todos.'
+            : "Nenhum serviço registrado";
+          servicesList.innerHTML = `<div class="small muted" style="padding:12px">${emptyMsg}</div>`;
           return;
+        }
+
+        if (isFiltered && list.length < totalServices) {
+          const info = document.createElement("div");
+          info.className = "small muted";
+          info.style.padding = "12px";
+          const hidden = totalServices - list.length;
+          info.textContent = `Há ${hidden} ${formatServiceWord(
+            hidden
+          )} fora da visão atual; clique em "Resetar" para visualizar tudo.`;
+          servicesList.appendChild(info);
         }
 
         list.forEach(s => {
@@ -713,8 +741,8 @@ ${photosHtml}
       }
 
       function render() {
-        const month = filterMonth.value || null;
-        const worker = filterWorker.value || "";
+        const month = activeFilters.month;
+        const worker = activeFilters.worker;
         renderSummary(month, worker);
         renderList(month, worker);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
@@ -757,11 +785,16 @@ ${photosHtml}
         save();
       });
       document.getElementById("applyFilter").addEventListener("click", () => {
+        activeFilters = {
+          month: filterMonth.value || null,
+          worker: filterWorker.value || "",
+        };
         render();
       });
       document.getElementById("resetFilter").addEventListener("click", () => {
         filterMonth.value = "";
         filterWorker.value = "";
+        activeFilters = { month: null, worker: "" };
         render();
       });
       document.getElementById("export").addEventListener("click", exportCSV);
