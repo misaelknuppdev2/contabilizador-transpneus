@@ -532,6 +532,10 @@
         services.unshift(item);
         form.reset();
         qtyInput.value = 1;
+        // reset filtros ativos para que o novo serviço apareça de imediato
+        activeFilters = { month: null, worker: "" };
+        filterMonth.value = "";
+        filterWorker.value = "";
         save();
         // clear file input (for some browsers)
         photosInput.value = "";
