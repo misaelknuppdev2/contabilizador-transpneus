@@ -191,6 +191,9 @@
         align-items: center;
         flex-wrap: wrap;
       }
+      .controls label {
+        margin: 0;
+      }
       .right {
         margin-left: auto;
         display: flex;
@@ -222,6 +225,33 @@
       .summary .item .muted {
         color: var(--muted-300);
         font-weight: 600;
+      }
+      .summary-value {
+        font-weight: 600;
+        margin-top: 6px;
+      }
+      .form-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      .section-spacer {
+        margin-top: 12px;
+      }
+      .price-value {
+        margin-left: 8px;
+      }
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .empty-state {
+        padding: 12px;
+      }
+      .info-banner {
+        padding: 12px;
       }
       .services {
         max-height: 68vh;
@@ -260,6 +290,31 @@
         color: var(--accent-blue);
         background: transparent;
         border: 1px solid rgba(11, 110, 230, 0.08);
+      }
+      .service-card-content {
+        min-width: 0;
+        max-width: 68%;
+      }
+      .service-row-meta {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .service-worker {
+        font-weight: 700;
+      }
+      .service-desc {
+        margin-top: 6px;
+      }
+      .service-total {
+        margin-top: 6px;
+      }
+      .service-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
       }
 
       /* Thumbnails */
@@ -404,18 +459,25 @@
                 local
               </div>
 
-              <div style="display: flex; gap: 8px; margin-top: 12px">
+              <div class="form-actions">
                 <button type="submit">Adicionar serviço</button>
                 <button type="button" id="clear" class="ghost">Limpar tudo</button>
                 <button type="button" id="export" class="ghost">Exportar CSV</button>
               </div>
             </form>
 
-            <div style="margin-top: 12px">
+            <div class="section-spacer">
               <div class="controls">
-                <label for="filterMonth" style="margin: 0">Filtrar mês</label>
-                <input type="month" id="filterMonth" />
-                <label for="filterWorker" style="margin: 0">Colaborador</label>
+                <label for="filterMonth">Filtrar mês</label>
+                <input
+                  type="text"
+                  id="filterMonth"
+                  inputmode="numeric"
+                  pattern="[0-9]{4}-[0-9]{2}"
+                  placeholder="aaaa-mm"
+                  aria-label="Filtrar por mês (AAAA-MM)"
+                />
+                <label for="filterWorker">Colaborador</label>
                 <select id="filterWorker">
                   <option value="">Todos</option>
                   <option value="Luís">Luís</option>
@@ -423,7 +485,7 @@
                 </select>
                 <div class="right">
                   <span class="small muted">Valor por roda</span>
-                  <strong style="margin-left: 8px">R$ 6,00</strong>
+                  <strong class="price-value">R$ 6,00</strong>
                 </div>
               </div>
 
@@ -432,7 +494,7 @@
           </div>
 
           <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center">
+            <div class="card-header">
               <strong>Serviços registrados</strong>
               <span class="muted small" id="countText">0 serviços</span>
             </div>
@@ -476,6 +538,20 @@
 
       function formatServiceWord(count) {
         return count === 1 ? "serviço" : "serviços";
+      }
+
+      function normalizeMonthValue(value) {
+        if (!value) return "";
+        const trimmed = value.trim();
+        const match = trimmed.match(/^(\d{4})[-/]?(\d{1,2})$/);
+        if (!match) return trimmed;
+        const monthNum = Math.min(12, Math.max(1, parseInt(match[2], 10)));
+        return `${match[1]}-${String(monthNum).padStart(2, "0")}`;
+      }
+
+      function extractValidMonth(value) {
+        const trimmed = value.trim();
+        return /^\d{4}-\d{2}$/.test(trimmed) ? trimmed : "";
       }
 
       function save() {
@@ -593,7 +669,7 @@
         cards.forEach(c => {
           const el = document.createElement("div");
           el.className = "item";
-          el.innerHTML = `<div class="muted">${c.title}</div><div style="font-weight:600;margin-top:6px">${c.value}</div>`;
+          el.innerHTML = `<div class="muted">${c.title}</div><div class="summary-value">${c.value}</div>`;
           summaryEl.appendChild(el);
         });
 
@@ -602,7 +678,7 @@
           const t = calcTotals(arr);
           const el = document.createElement("div");
           el.className = "item";
-          el.innerHTML = `<div class="muted">Colaborador ${w} (geral)</div><div style="font-weight:600;margin-top:6px">${t.totalRodas} rodas; ${t.totalServ} serviços</div>`;
+          el.innerHTML = `<div class="muted">Colaborador ${w} (geral)</div><div class="summary-value">${t.totalRodas} rodas; ${t.totalServ} serviços</div>`;
           summaryEl.appendChild(el);
         });
 
@@ -614,7 +690,7 @@
             const t = calcTotals(arr);
             const el = document.createElement("div");
             el.className = "item";
-            el.innerHTML = `<div class="muted">Colaborador ${w} em ${filteredMonthKey}</div><div style="font-weight:600;margin-top:6px">${
+            el.innerHTML = `<div class="muted">Colaborador ${w} em ${filteredMonthKey}</div><div class="summary-value">${
               t.totalRodas
             } rodas; ${t.totalServ} serviços; R$ ${t.ganho.toFixed(2)}</div>`;
             summaryEl.appendChild(el);
@@ -626,7 +702,7 @@
           el.className = "item";
           const workerLabel = filteredWorkerKey ? filteredWorkerKey : "Todos";
           const monthLabel = filteredMonthKey ? filteredMonthKey : "Todos";
-          el.innerHTML = `<div class="muted">Resultado para ${workerLabel} - ${monthLabel}</div><div style="font-weight:600;margin-top:6px">${
+          el.innerHTML = `<div class="muted">Resultado para ${workerLabel} - ${monthLabel}</div><div class="summary-value">${
             bothTotals.totalRodas
           } rodas; ${bothTotals.totalServ} serviços; R$ ${bothTotals.ganho.toFixed(2)}</div>`;
           summaryEl.appendChild(el);
@@ -669,14 +745,13 @@
           const emptyMsg = isFiltered
             ? "Nenhum serviço encontrado com os filtros aplicados. Ajuste as opções acima para visualizar outros registros."
             : "Nenhum serviço registrado";
-          servicesList.innerHTML = `<div class="small muted" style="padding:12px">${emptyMsg}</div>`;
+          servicesList.innerHTML = `<div class="small muted empty-state">${emptyMsg}</div>`;
           return;
         }
 
         if (isFiltered && list.length < totalServices) {
           const info = document.createElement("div");
-          info.className = "small muted";
-          info.style.padding = "12px";
+          info.className = "small muted info-banner";
           const hidden = totalServices - list.length;
           info.textContent = `Há ${hidden} ${formatServiceWord(
             hidden
@@ -703,18 +778,18 @@ ${s.photos
               : "";
 
           row.innerHTML = `
-<div style="min-width:0;max-width:68%">
-<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-<div style="font-weight:700">${s.worker}</div>
+<div class="service-card-content">
+<div class="service-row-meta">
+<div class="service-worker">${s.worker}</div>
 <div class="small muted">• ${formatDate(s.date)}</div>
 </div>
-<div class="meta" style="margin-top:6px">${s.desc}</div>
-<div class="small muted" style="margin-top:6px"><span class="qty">${s.qty}</span> rodas · R$ ${(
+<div class="meta service-desc">${s.desc}</div>
+<div class="small muted service-total"><span class="qty">${s.qty}</span> rodas · R$ ${(
             s.qty * PRICE_PER_WHEEL
           ).toFixed(2)}</div>
 ${photosHtml}
 </div>
-<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+<div class="service-actions">
 <button class="ghost" data-id="${s.id}" aria-label="Excluir serviço">Excluir</button>
 <div class="small muted">${s.photos ? s.photos.length : 0} fotos</div>
 </div>
@@ -740,7 +815,11 @@ ${photosHtml}
       }
 
       function render() {
-        const month = filterMonth.value || null;
+        const monthValue = extractValidMonth(filterMonth.value);
+        if (monthValue && filterMonth.value !== monthValue) {
+          filterMonth.value = monthValue;
+        }
+        const month = monthValue || null;
         const worker = filterWorker.value || "";
         renderSummary(month, worker);
         renderList(month, worker);
@@ -783,8 +862,16 @@ ${photosHtml}
         services = [];
         save();
       });
-      filterMonth.addEventListener("change", render);
-      filterMonth.addEventListener("input", render);
+      function handleMonthFilterChange() {
+        const normalized = normalizeMonthValue(filterMonth.value);
+        if (normalized !== filterMonth.value) {
+          filterMonth.value = normalized;
+        }
+        render();
+      }
+
+      filterMonth.addEventListener("change", handleMonthFilterChange);
+      filterMonth.addEventListener("blur", handleMonthFilterChange);
       filterWorker.addEventListener("change", render);
       document.getElementById("export").addEventListener("click", exportCSV);
 
