@@ -1,4 +1,4 @@
-const CACHE_NAME = "contabilizador-v2";
+const CACHE_NAME = "contabilizador-v3";
 const ASSETS = [
   ".",
   "/index.html",
@@ -27,21 +27,32 @@ self.addEventListener("fetch", event => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // same-origin navigation or app shell -> cache first
-  if (req.mode === "navigate" || ASSETS.includes(url.pathname)) {
+  // always try network first for navigation requests so new versions load immediately
+  if (req.mode === "navigate") {
     event.respondWith(
-      caches
-        .match(req)
-        .then(
-          cached =>
-            cached ||
-            fetch(req).then(res => {
-              const copy = res.clone();
-              caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
-              return res;
-            })
-        )
-        .catch(() => caches.match("/index.html"))
+      fetch(req)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+          return res;
+        })
+        .catch(async () => (await caches.match(req)) || caches.match("/index.html"))
+    );
+    return;
+  }
+
+  // app shell assets (except index) cache-first
+  if (ASSETS.includes(url.pathname)) {
+    event.respondWith(
+      caches.match(req).then(
+        cached =>
+          cached ||
+          fetch(req).then(res => {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+            return res;
+          })
+      )
     );
     return;
   }
